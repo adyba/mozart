@@ -158,12 +158,14 @@ function song_play(bar_i) {
 		$('#song_stop').prop('disabled', false);
 		$('#song_play').prop('disabled', true);
 		$('#play_loop').prop('disabled', true);
+		$('#song_generate').prop('disabled', true);
 	}
 	var bar = document.getElementById("player"+bar_i);
 	if(bar == undefined) { // ERROR
 		$('#song_stop').prop('disabled', true);
 		$('#song_play').prop('disabled', false);
 		$('#play_loop').prop('disabled', false);
+		$('#song_generate').prop('disabled', false);
 		return;
 	}
 	// Next bar
@@ -206,6 +208,8 @@ function song_stop() {
 	}
 		$('#song_stop').prop('disabled', true);
 		$('#song_play').prop('disabled', false);
+		$('#play_loop').prop('disabled', false);
+		$('#song_generate').prop('disabled', false);
 
 		playing_loop = false;
 }
@@ -323,6 +327,7 @@ function song_generate() {
 	song_preview();
 	$('#song_play').prop('disabled', false);
 	$('#play_loop').prop('disabled', false);
+	$('#song_generate').prop('disabled', false);
 	preload();
 }
 
