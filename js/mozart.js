@@ -12,6 +12,8 @@ var playing = new Array();
 var type = 'M'; // Type value M - minuet, T - trio
 var loaded = new Array(BARS_COUNT);
 
+var playing_loop = false;
+
 // minuet[row][col]
 var minuet = [
 	[ 96, 22,141, 41,105,122, 11, 30, 70,121, 26,  9,112, 49,109, 14],
@@ -152,29 +154,44 @@ function bar_file(bar,player_id) {
  */
 function song_play(bar_i) {
 	if(bar_i == 0) { // End of song
-		song_stop();
+		if(!playing_loop)song_stop();
 		$('#song_stop').prop('disabled', false);
 		$('#song_play').prop('disabled', true);
+		$('#play_loop').prop('disabled', true);
 	}
 	var bar = document.getElementById("player"+bar_i);
 	if(bar == undefined) { // ERROR
 		$('#song_stop').prop('disabled', true);
 		$('#song_play').prop('disabled', false);
+		$('#play_loop').prop('disabled', false);
 		return;
-	}
-	if(bar_i == 8) {
-		if(document.getElementById("playOnly8") != undefined) {
-			return;
-		}
 	}
 	// Next bar
 	var nid = bar_i + 1;
+	if(nid >= BARS_COUNT) {
+		nid = 0;
+	}
 	bar.play();
 	// Remember timming handler
 	playing[bar_i] = setTimeout(function() {song_play(nid)},1800);
 	$('.playing').removeClass('playing');
 	debug(".bar"+bar_i+" .song");
 	$(".bar"+bar_i+".song").addClass('playing');
+
+	// Loop
+	if (playing_loop) {
+		var lid = bar_i + ( BARS_COUNT / 2 );
+		if (lid >= BARS_COUNT) { 
+			lid = lid - BARS_COUNT;
+		}
+		song_generate_bar(lid);
+	}
+}
+
+
+function play_loop() {
+	playing_loop = true;
+	song_play(0);
 }
 
 
@@ -189,6 +206,8 @@ function song_stop() {
 	}
 		$('#song_stop').prop('disabled', true);
 		$('#song_play').prop('disabled', false);
+
+		playing_loop = false;
 }
 
 function song_again() {
@@ -261,6 +280,22 @@ function get_bars(id) {
 	return bars;
 }
 
+function song_generate_bar(col) {
+	debug("song_generate_bar("+type+")");
+	if( playing_loop ) {
+		$('.bar'+col).removeClass('song');
+	}
+	
+	row = dice_toss(bars.length);
+	bar = bars[row][col];
+	song.push(type+bar);
+	html_get(type+bar).addClass('song');
+	bar_file(type+bar,col);
+
+
+	preload_bar(col);
+}
+
 function song_generate() {
 	debug("song_generate("+type+")");
 
@@ -277,15 +312,17 @@ function song_generate() {
 	debug("rows: "+rows+", cols: "+cols);
 
 	for(col = 0; col < cols; col++) {
-		row = dice_toss(rows);
-		bar = bars[row][col];
-		song.push(type+bar);
-		html_get(type+bar).addClass('song');
-		bar_file(type+bar,col);
+		song_generate_bar(col);
+		// row = dice_toss(rows);
+		// bar = bars[row][col];
+		// song.push(type+bar);
+		// html_get(type+bar).addClass('song');
+		// bar_file(type+bar,col);
 	}
 	debug(song);
 	song_preview();
 	$('#song_play').prop('disabled', false);
+	$('#play_loop').prop('disabled', false);
 	preload();
 }
 
@@ -321,6 +358,15 @@ function player_init(){
 	}
 }
 
+function preload_bar(i) {
+		debug("player "+i+" handled!");
+		html_get("player"+i).on("loadeddata",function(e){
+		//document.getElementById("player"+i).addEventListener("loadeddata", function() {
+			onloaded(e);
+			//html_get("player"+i).show();
+		});
+}
+
 function preload() {
 	debug("Preload");
 
@@ -330,12 +376,13 @@ function preload() {
 	debug("preload: "+loaded);
 
 	for (var i = 0; i< BARS_COUNT; i++) {
-		debug("player "+i+" handled!");
-		html_get("player"+i).on("loadeddata",function(e){
-		//document.getElementById("player"+i).addEventListener("loadeddata", function() {
-			onloaded(e);
-			//html_get("player"+i).show();
-		});
+		preload_bar(i);
+		// debug("player "+i+" handled!");
+		// html_get("player"+i).on("loadeddata",function(e){
+		// //document.getElementById("player"+i).addEventListener("loadeddata", function() {
+		// 	onloaded(e);
+		// 	//html_get("player"+i).show();
+		// });
 	}
 }
 
